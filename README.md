@@ -1,6 +1,6 @@
 # winlog
  A Independent Logging Library for Windows
 
-Without Constant String
+No Constant String In It
 
-Without CRT
+No CRT In It
