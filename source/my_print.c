@@ -19,26 +19,26 @@ static size_t string_length_w(const wchar_t* str)
 
 #define PRINT_BUFFER_LENGTH (64 + 1)
 
-static long long get_args_value(int z_count, int h_count, int l_count, va_list args)
+static long long get_args_value(int z_count, int h_count, int l_count, va_list* args)
 {
 	long long value;
 	if (z_count == 1) {
-		value = (long long)((void*)va_arg(args, void*));
+		value = (long long)((void*)va_arg(*args, void*));
 	}
 	else if (h_count == 1) {
-		value = (short)va_arg(args, short);
+		value = (short)va_arg(*args, short);
 	}
 	else if (h_count == 2) {
-		value = (char)va_arg(args, char);
+		value = (char)va_arg(*args, char);
 	}
 	else if (l_count == 1) {
-		value = (long)va_arg(args, long);
+		value = (long)va_arg(*args, long);
 	}
 	else if (l_count == 2) {
-		value = (long long)va_arg(args, long long);
+		value = (long long)va_arg(*args, long long);
 	}
 	else {
-		value = (int)va_arg(args, int);
+		value = (int)va_arg(*args, int);
 	}
 	return value;
 }
@@ -261,7 +261,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list a
 			}
 
 			if (radix != 0) {
-				result += my_print_i(&out, get_args_value(z_count, h_count, l_count, args), radix, is_signed, letter_base, width);
+				result += my_print_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
 				continue;
 			}
 		}
@@ -501,7 +501,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list a
 			}
 
 			if (radix != 0) {
-				result += my_wprint_i(&out, get_args_value(z_count, h_count, l_count, args), radix, is_signed, letter_base, width);
+				result += my_wprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
 				continue;
 			}
 		}
