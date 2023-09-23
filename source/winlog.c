@@ -1,5 +1,5 @@
 ﻿#include "winlog.h"
-#include "my_print.h"
+#include "my_sprint.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -91,27 +91,27 @@ static char* BufferToStringA(unsigned char* buffer, size_t size, int show_in_c_a
 		size_t i;
 		for (i = 0; i < size; i++) {
 			if (show_in_c_array) {
-				my_print_c(&str, '0');
-				my_print_c(&str, 'x');
-				my_print_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
-				my_print_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
+				my_sprint_c(&str, '0');
+				my_sprint_c(&str, 'x');
+				my_sprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
+				my_sprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
 				if (i != size - 1) {
-					my_print_c(&str, ',');
+					my_sprint_c(&str, ',');
 				}
 			}
 			else {
-				my_print_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
-				my_print_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
+				my_sprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
+				my_sprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
 				if (i != size - 1) {
-					my_print_c(&str, ' ');
+					my_sprint_c(&str, ' ');
 				}
 			}
 			if (((i + 1) % count_per_line) == 0) {
-				my_print_c(&str, '\n');
+				my_sprint_c(&str, '\n');
 			}
 		}
 		if ((i % count_per_line) != 0) {
-			my_print_c(&str, '\n');
+			my_sprint_c(&str, '\n');
 		}
 		*str = '\0';
 	}
@@ -134,27 +134,27 @@ static wchar_t* BufferToStringW(unsigned char* buffer, size_t size, int show_in_
 		size_t i;
 		for (i = 0; i < size; i++) {
 			if (show_in_c_array) {
-				my_wprint_c(&str, '0');
-				my_wprint_c(&str, 'x');
-				my_wprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
-				my_wprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
+				my_wsprint_c(&str, '0');
+				my_wsprint_c(&str, 'x');
+				my_wsprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
+				my_wsprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
 				if (i != size - 1) {
-					my_wprint_c(&str, ',');
+					my_wsprint_c(&str, ',');
 				}
 			}
 			else {
-				my_wprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
-				my_wprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
+				my_wsprint_c(&str, to_hex_char(buffer[i] >> 4, 'A'));
+				my_wsprint_c(&str, to_hex_char(buffer[i] & 0x0F, 'A'));
 				if (i != size - 1) {
-					my_wprint_c(&str, ' ');
+					my_wsprint_c(&str, ' ');
 				}
 			}
 			if (((i + 1) % count_per_line) == 0) {
-				my_wprint_c(&str, '\n');
+				my_wsprint_c(&str, '\n');
 			}
 		}
 		if ((i % count_per_line) != 0) {
-			my_wprint_c(&str, '\n');
+			my_wsprint_c(&str, '\n');
 		}
 		*str = '\0';
 	}
@@ -218,11 +218,11 @@ void __cdecl LogFormatA(LogCtx* ctx, const char* Format, ...)
 	if (ctx != NULL && ctx->_FileName != NULL) {
 		va_list ArgList;
 		va_start(ArgList, Format);
-		size_t BufferCount = my_print(NULL, Format, ArgList);//no null end
+		size_t BufferCount = my_sprint(NULL, Format, ArgList);//no null end
 		size_t BufferSize = BufferCount * sizeof(char);
 		char* Buffer = (char*)Alloc(BufferSize);
 		if (Buffer != NULL) {
-			my_print(Buffer, Format, ArgList);
+			my_sprint(Buffer, Format, ArgList);
 			Log(ctx, Buffer, BufferSize);
 			Free(Buffer);
 		}
@@ -235,11 +235,11 @@ void __cdecl LogFormatW(LogCtx* ctx, const wchar_t* Format, ...)
 	if (ctx != NULL && ctx->_FileName != NULL) {
 		va_list ArgList;
 		va_start(ArgList, Format);
-		size_t BufferCount = my_wprint(NULL, Format, ArgList);//no null end
+		size_t BufferCount = my_wsprint(NULL, Format, ArgList);//no null end
 		size_t BufferSize = BufferCount * sizeof(wchar_t);
 		wchar_t* Buffer = (wchar_t*)Alloc(BufferSize);
 		if (Buffer != NULL) {
-			my_wprint(Buffer, Format, ArgList);
+			my_wsprint(Buffer, Format, ArgList);
 			Log(ctx, Buffer, BufferSize);
 			Free(Buffer);
 		}
@@ -283,10 +283,10 @@ void __cdecl DebugFormatA(const char* Format, ...)
 {
 	va_list ArgList;
 	va_start(ArgList, Format);
-	size_t BufferCount = my_print(NULL, Format, ArgList);//no null end
+	size_t BufferCount = my_sprint(NULL, Format, ArgList);//no null end
 	char* Buffer = (char*)Alloc((BufferCount + 1) * sizeof(char));
 	if (Buffer != NULL) {
-		my_print(Buffer, Format, ArgList);
+		my_sprint(Buffer, Format, ArgList);
 		Buffer[BufferCount] = '\0';
 		DebugStringA(Buffer);
 		Free(Buffer);
@@ -298,10 +298,10 @@ void __cdecl DebugFormatW(const wchar_t* Format, ...)
 {
 	va_list ArgList;
 	va_start(ArgList, Format);
-	size_t BufferCount = my_wprint(NULL, Format, ArgList);//no null end
+	size_t BufferCount = my_wsprint(NULL, Format, ArgList);//no null end
 	wchar_t* Buffer = (wchar_t*)Alloc((BufferCount + 1) * sizeof(wchar_t));
 	if (Buffer != NULL) {
-		my_wprint(Buffer, Format, ArgList);
+		my_wsprint(Buffer, Format, ArgList);
 		Buffer[BufferCount] = '\0';
 		DebugStringW(Buffer);
 		Free(Buffer);

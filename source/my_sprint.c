@@ -1,4 +1,4 @@
-﻿#include "my_print.h"
+﻿#include "my_sprint.h"
 #include <stdarg.h>
 
 static size_t string_length_a(const char* str)
@@ -44,7 +44,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 }
 
 
-/*static*/ void my_print_c(char** out, int c)
+/*static*/ void my_sprint_c(char** out, int c)
 {
 	if (*out) {
 		**out = (char)c;
@@ -55,7 +55,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	//}
 }
 
-/*static*/ size_t my_print_s_a(char** out, const char* s, size_t width)
+/*static*/ size_t my_sprint_s_a(char** out, const char* s, size_t width)
 {
 	size_t length = string_length_a(s);
 
@@ -69,19 +69,19 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	result += width;
 	while (width--)
 	{
-		my_print_c(out, '0');
+		my_sprint_c(out, '0');
 	}
 
 	result += length;
 	while (length--)
 	{
-		my_print_c(out, *(s++));
+		my_sprint_c(out, *(s++));
 	}
 
 	return result;
 }
 
-/*static*/ size_t my_print_s_w(char** out, const wchar_t* s, size_t width)
+/*static*/ size_t my_sprint_s_w(char** out, const wchar_t* s, size_t width)
 {
 	size_t length = string_length_w(s);
 
@@ -95,26 +95,26 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	result += width;
 	while (width--)
 	{
-		my_print_c(out, '0');
+		my_sprint_c(out, '0');
 	}
 
 	result += length;
 	while (length--)
 	{
-		my_print_c(out, *(s++));
+		my_sprint_c(out, *(s++));
 	}
 
 	return result;
 }
 
-/*static*/ size_t my_print_i(char** out, long long i, int radix, int is_signed, int letter_base, size_t width)
+/*static*/ size_t my_sprint_i(char** out, long long i, int radix, int is_signed, int letter_base, size_t width)
 {
 	//1111111111111111111111111111111111111111111111111111111111111111
 	char print_buffer[PRINT_BUFFER_LENGTH];
 	if (i == 0) {
 		print_buffer[0] = '0';
 		print_buffer[1] = '\0';
-		return my_print_s_a(out, print_buffer, width);
+		return my_sprint_s_a(out, print_buffer, width);
 	}
 	unsigned long long u = i;
 	int is_negative = 0;
@@ -144,10 +144,10 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 		*(--s) = '-';
 	}
 
-	return my_print_s_a(out, s, width);
+	return my_sprint_s_a(out, s, width);
 }
 
-/*static*/ size_t my_print(char* out, const char* format, va_list args)
+/*static*/ size_t my_sprint(char* out, const char* format, va_list args)
 {
 	size_t result = 0;
 
@@ -168,32 +168,32 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 				break;
 			}
 			if (*format == '%') {
-				my_print_c(&out, *format);
+				my_sprint_c(&out, *format);
 				result++;
 				continue;
 			}
 			if (*format == 'c') {
-				my_print_c(&out, (char)va_arg(args, int));
+				my_sprint_c(&out, (char)va_arg(args, int));
 				result++;
 				continue;
 			}
 
 			if (*format == 'p') {
-				result += my_print_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'a', sizeof(void*) * 2);
+				result += my_sprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'a', sizeof(void*) * 2);
 				continue;
 			}
 
 			if (*format == 'P') {
-				result += my_print_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'A', sizeof(void*) * 2);
+				result += my_sprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'A', sizeof(void*) * 2);
 				continue;
 			}
 
 			if (*format == 's') {
-				result += my_print_s_a(&out, (char*)va_arg(args, char*), 0);
+				result += my_sprint_s_a(&out, (char*)va_arg(args, char*), 0);
 				continue;
 			}
 			if (*format == 'S') {
-				result += my_print_s_w(&out, (wchar_t*)va_arg(args, wchar_t*), 0);
+				result += my_sprint_s_w(&out, (wchar_t*)va_arg(args, wchar_t*), 0);
 				continue;
 			}
 
@@ -261,12 +261,12 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 			}
 
 			if (radix != 0) {
-				result += my_print_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
+				result += my_sprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
 				continue;
 			}
 		}
 		else {
-			my_print_c(&out, *format);
+			my_sprint_c(&out, *format);
 			result++;
 		}
 	}
@@ -278,13 +278,13 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 {
 	va_list args;
 	va_start(args, format);
-	size_t result = my_print(out, format, args);
+	size_t result = my_sprint(out, format, args);
 	va_end(args);
 	return result;
 }
 
 
-/*static*/ void my_wprint_c(wchar_t** out, int c)
+/*static*/ void my_wsprint_c(wchar_t** out, int c)
 {
 	if (*out) {
 		**out = (wchar_t)c;
@@ -295,7 +295,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	//}
 }
 
-/*static*/ size_t my_wprint_s_a(wchar_t** out, const char* s, size_t width)
+/*static*/ size_t my_wsprint_s_a(wchar_t** out, const char* s, size_t width)
 {
 	size_t length = string_length_a(s);
 
@@ -309,19 +309,19 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	result += width;
 	while (width--)
 	{
-		my_wprint_c(out, '0');
+		my_wsprint_c(out, '0');
 	}
 
 	result += length;
 	while (length--)
 	{
-		my_wprint_c(out, *(s++));
+		my_wsprint_c(out, *(s++));
 	}
 
 	return result;
 }
 
-/*static*/ size_t my_wprint_s_w(wchar_t** out, const wchar_t* s, size_t width)
+/*static*/ size_t my_wsprint_s_w(wchar_t** out, const wchar_t* s, size_t width)
 {
 	size_t length = string_length_w(s);
 
@@ -335,26 +335,26 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	result += width;
 	while (width--)
 	{
-		my_wprint_c(out, '0');
+		my_wsprint_c(out, '0');
 	}
 
 	result += length;
 	while (length--)
 	{
-		my_wprint_c(out, *(s++));
+		my_wsprint_c(out, *(s++));
 	}
 
 	return result;
 }
 
-/*static*/ size_t my_wprint_i(wchar_t** out, long long i, int radix, int is_signed, int letter_base, size_t width)
+/*static*/ size_t my_wsprint_i(wchar_t** out, long long i, int radix, int is_signed, int letter_base, size_t width)
 {
 	//1111111111111111111111111111111111111111111111111111111111111111
 	char print_buffer[PRINT_BUFFER_LENGTH];
 	if (i == 0) {
 		print_buffer[0] = '0';
 		print_buffer[1] = '\0';
-		return my_wprint_s_a(out, print_buffer, width);
+		return my_wsprint_s_a(out, print_buffer, width);
 	}
 	unsigned long long u = i;
 	int is_negative = 0;
@@ -384,10 +384,10 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 		*(--s) = '-';
 	}
 
-	return my_wprint_s_a(out, s, width);
+	return my_wsprint_s_a(out, s, width);
 }
 
-/*static*/ size_t my_wprint(wchar_t* out, const wchar_t* format, va_list args)
+/*static*/ size_t my_wsprint(wchar_t* out, const wchar_t* format, va_list args)
 {
 	size_t result = 0;
 
@@ -408,32 +408,32 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 				break;
 			}
 			if (*format == '%') {
-				my_wprint_c(&out, *format);
+				my_wsprint_c(&out, *format);
 				result++;
 				continue;
 			}
 			if (*format == 'c') {
-				my_wprint_c(&out, va_arg(args, int));
+				my_wsprint_c(&out, va_arg(args, int));
 				result++;
 				continue;
 			}
 
 			if (*format == 'p') {
-				result += my_wprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'a', sizeof(void*) * 2);
+				result += my_wsprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'a', sizeof(void*) * 2);
 				continue;
 			}
 
 			if (*format == 'P') {
-				result += my_wprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'A', sizeof(void*) * 2);
+				result += my_wsprint_i(&out, (long long)((void*)va_arg(args, void*)), 16, 0, 'A', sizeof(void*) * 2);
 				continue;
 			}
 
 			if (*format == 's') {
-				result += my_wprint_s_w(&out, (wchar_t*)va_arg(args, wchar_t*), 0);
+				result += my_wsprint_s_w(&out, (wchar_t*)va_arg(args, wchar_t*), 0);
 				continue;
 			}
 			if (*format == 'S') {
-				result += my_wprint_s_a(&out, (char*)va_arg(args, char*), 0);
+				result += my_wsprint_s_a(&out, (char*)va_arg(args, char*), 0);
 				continue;
 			}
 
@@ -501,12 +501,12 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 			}
 
 			if (radix != 0) {
-				result += my_wprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
+				result += my_wsprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
 				continue;
 			}
 		}
 		else {
-			my_wprint_c(&out, *format);
+			my_wsprint_c(&out, *format);
 			result++;
 		}
 	}
@@ -518,7 +518,7 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 {
 	va_list args;
 	va_start(args, format);
-	size_t result = my_wprint(out, format, args);
+	size_t result = my_wsprint(out, format, args);
 	va_end(args);
 	return result;
 }
