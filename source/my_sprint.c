@@ -44,6 +44,192 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 }
 
 
+static long long get_integer_part(unsigned char* binary, int size) {
+	long long integer = 0;
+	long long value = 1;
+	for (int i = size - 1; i != 0; i--) {
+		if (binary[i] == 1) {
+			integer += value;
+		}
+		value *= 2;
+	}
+	return integer;
+}
+
+static int ipow(int base, int exp)
+{
+	int result = 1;
+	for (;;)
+	{
+		if (exp & 1)
+			result *= base;
+		exp >>= 1;
+		if (!exp)
+			break;
+		base *= base;
+	}
+	return result;
+}
+
+static long long get_decimal_part(unsigned char* binary, int size, int precision)
+{
+	double decimal = 0.0;
+	double fraction = 0.5;
+	for (int i = 0; i < size; i++) {
+		if (binary[i] == 1) {
+			decimal += fraction;
+		}
+		fraction *= 0.5;
+	}
+	return (long long)(decimal * ipow(10, precision));
+}
+
+size_t my_sprint_f(char** out, float f, int precision)
+{
+	if (precision == 0) {
+		precision = 6;
+	}
+
+	size_t result = 0;
+
+	unsigned int bits = *(unsigned int*)&f;
+	int sign = (bits >> 31) & 1;
+	int exponent = ((bits >> 23) & 0xFF);
+	unsigned int mantissa = bits & 0x7FFFFF;
+
+	if (sign) {
+		result += 1; my_sprint_c(out, '-');
+	}
+
+	if (exponent == 0 && mantissa == 0) {
+		result += 1; my_sprint_c(out, '0');
+		result += 1; my_sprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_sprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b0111'1111 && mantissa == 0) {
+		result += 1; my_sprint_c(out, '1');
+		result += 1; my_sprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_sprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b1111'1111 && mantissa == 0) {
+		result += 1; my_sprint_c(out, 'i');
+		result += 1; my_sprint_c(out, 'n');
+		result += 1; my_sprint_c(out, 'f');
+		return result;
+	}
+	else if (exponent == 0b1111'1111 && mantissa != 0) {
+		result += 1; my_sprint_c(out, 'n');
+		result += 1; my_sprint_c(out, 'a');
+		result += 1; my_sprint_c(out, 'n');
+		return result;
+	}
+
+	exponent -= 0b0111'1111;
+	mantissa |= (1 << 23);
+
+#define BINARY_SIZE 32
+	int decimal_part_start = (1 + 8 + exponent);
+	if (0 < decimal_part_start && decimal_part_start < BINARY_SIZE){
+		unsigned char binary[BINARY_SIZE];
+		for (size_t i = 0; i < BINARY_SIZE; i++){
+			binary[i] = (mantissa >> ((BINARY_SIZE - 1) - i)) & 1;
+		}
+		long long integer_part = get_integer_part(binary, decimal_part_start);
+		long long decimal_part = get_decimal_part(binary + decimal_part_start, BINARY_SIZE - decimal_part_start, precision);
+		result += my_sprint_i(out, integer_part, 10, 0, 0, 0);
+		result += 1; my_sprint_c(out, '.');
+		result += my_sprint_i(out, decimal_part, 10, 0, 0, 0);
+	}
+	else {
+		result += 1; my_sprint_c(out, 'e');
+		result += 1; my_sprint_c(out, 'r');
+		result += 1; my_sprint_c(out, 'r');
+	}
+#undef BINARY_SIZE
+	return result;
+}
+
+size_t my_sprint_lf(char** out, double lf, int precision)
+{
+	if (precision == 0) {
+		precision = 6;
+	}
+
+	size_t result = 0;
+
+	unsigned long long bits = *(unsigned long long*)&lf;
+	int sign = (bits >> 63) & 1;
+	int exponent = (bits >> 52) & 0x7FF;
+	unsigned long long mantissa = bits & 0xF'FFFF'FFFF'FFFF;
+
+	if (sign) {
+		result += 1; my_sprint_c(out, '-');
+	}
+
+	if (exponent == 0 && mantissa == 0) {
+		result += 1; my_sprint_c(out, '0');
+		result += 1; my_sprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_sprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b011'1111'1111 && mantissa == 0) {
+		result += 1; my_sprint_c(out, '1');
+		result += 1; my_sprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_sprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b111'1111'1111 && mantissa == 0) {
+		result += 1; my_sprint_c(out, 'i');
+		result += 1; my_sprint_c(out, 'n');
+		result += 1; my_sprint_c(out, 'f');
+		return result;
+	}
+	else if (exponent == 0b111'1111'1111 && mantissa != 0) {
+		result += 1; my_sprint_c(out, 'n');
+		result += 1; my_sprint_c(out, 'a');
+		result += 1; my_sprint_c(out, 'n');
+		return result;
+	}
+
+	exponent -= 0b011'1111'1111;
+	mantissa |= (1ULL << 52);
+
+#define BINARY_SIZE 64
+	int decimal_part_start = (1 + 11 + exponent);
+	if (0 < decimal_part_start && decimal_part_start < BINARY_SIZE) {
+		unsigned char binary[BINARY_SIZE];
+		for (size_t i = 0; i < BINARY_SIZE; i++) {
+			binary[i] = (mantissa >> ((BINARY_SIZE - 1) - i)) & 1;
+		}
+		long long integer_part = get_integer_part(binary, decimal_part_start);
+		long long decimal_part = get_decimal_part(binary + decimal_part_start, BINARY_SIZE - decimal_part_start, precision);
+		result += my_sprint_i(out, integer_part, 10, 0, 0, 0);
+		result += 1; my_sprint_c(out, '.');
+		result += my_sprint_i(out, decimal_part, 10, 0, 0, 0);
+	}
+	else {
+		result += 1; my_sprint_c(out, 'e');
+		result += 1; my_sprint_c(out, 'r');
+		result += 1; my_sprint_c(out, 'r');
+	}
+#undef BINARY_SIZE
+	return result;
+}
+
 /*static*/ void my_sprint_c(char** out, int c)
 {
 	if (*out) {
@@ -264,6 +450,16 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 				result += my_sprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
 				continue;
 			}
+
+			if (*format == 'f') {
+				if (l_count == 0) {
+					result += my_sprint_f(&out, (float)va_arg(args, double), (int)width);
+				}
+				else {
+					result += my_sprint_lf(&out, (double)va_arg(args, double), (int)width);
+				}
+				continue;
+			}
 		}
 		else {
 			my_sprint_c(&out, *format);
@@ -280,6 +476,155 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 	va_start(args, format);
 	size_t result = my_sprint(out, format, args);
 	va_end(args);
+	return result;
+}
+
+size_t my_wsprint_f(wchar_t** out, float f, int precision)
+{
+	if (precision == 0) {
+		precision = 6;
+	}
+
+	size_t result = 0;
+	unsigned int bits = *(unsigned int*)&f;
+	int sign = (bits >> 31) & 1;
+	int exponent = ((bits >> 23) & 0xFF);
+	unsigned int mantissa = bits & 0x7FFFFF;
+
+	if (sign) {
+		result += 1; my_wsprint_c(out, '-');
+	}
+
+	if (exponent == 0 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, '0');
+		result += 1; my_wsprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_wsprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b0111'1111 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, '1');
+		result += 1; my_wsprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_wsprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b1111'1111 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, 'i');
+		result += 1; my_wsprint_c(out, 'n');
+		result += 1; my_wsprint_c(out, 'f');
+		return result;
+	}
+	else if (exponent == 0b1111'1111 && mantissa != 0) {
+		result += 1; my_wsprint_c(out, 'n');
+		result += 1; my_wsprint_c(out, 'a');
+		result += 1; my_wsprint_c(out, 'n');
+		return result;
+	}
+
+	exponent -= 0b0111'1111;
+	mantissa |= (1 << 23);
+
+#define BINARY_SIZE 32
+	int decimal_part_start = (1 + 8 + exponent);
+	if (0 < decimal_part_start && decimal_part_start < BINARY_SIZE) {
+		unsigned char binary[BINARY_SIZE];
+		for (size_t i = 0; i < BINARY_SIZE; i++)
+		{
+			binary[i] = (mantissa >> ((BINARY_SIZE - 1) - i)) & 1;
+		}
+
+		long long integer_part = get_integer_part(binary, decimal_part_start);
+		long long decimal_part = get_decimal_part(binary + decimal_part_start, BINARY_SIZE - decimal_part_start, precision);
+
+		result += my_wsprint_i(out, integer_part, 10, 0, 0, 0);
+		result += 1; my_wsprint_c(out, '.');
+		result += my_wsprint_i(out, decimal_part, 10, 0, 0, 0);
+	}
+	else {
+		result += 1; my_wsprint_c(out, 'e');
+		result += 1; my_wsprint_c(out, 'r');
+		result += 1; my_wsprint_c(out, 'r');
+	}
+#undef BINARY_SIZE
+	return result;
+}
+
+size_t my_wsprint_lf(wchar_t** out, double lf, int precision)
+{
+	if (precision == 0) {
+		precision = 6;
+	}
+
+	size_t result = 0;
+
+	unsigned long long bits = *(unsigned long long*) & lf;
+	int sign = (bits >> 63) & 1;
+	int exponent = (bits >> 52) & 0x7FF;
+	unsigned long long mantissa = bits & 0xF'FFFF'FFFF'FFFF;
+
+	if (sign) {
+		result += 1; my_wsprint_c(out, '-');
+	}
+
+	if (exponent == 0 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, '0');
+		result += 1; my_wsprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_wsprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b011'1111'1111 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, '1');
+		result += 1; my_wsprint_c(out, '.');
+		result += precision;
+		for (int i = 0; i < precision; i++) {
+			my_wsprint_c(out, '0');
+		}
+		return result;
+	}
+	else if (exponent == 0b111'1111'1111 && mantissa == 0) {
+		result += 1; my_wsprint_c(out, 'i');
+		result += 1; my_wsprint_c(out, 'n');
+		result += 1; my_wsprint_c(out, 'f');
+		return result;
+	}
+	else if (exponent == 0b111'1111'1111 && mantissa != 0) {
+		result += 1; my_wsprint_c(out, 'n');
+		result += 1; my_wsprint_c(out, 'a');
+		result += 1; my_wsprint_c(out, 'n');
+		return result;
+	}
+
+	exponent -= 0b011'1111'1111;
+	mantissa |= (1ULL << 52);
+
+#define BINARY_SIZE 64
+	int decimal_part_start = (1 + 11 + exponent);
+	if (0 < decimal_part_start && decimal_part_start < BINARY_SIZE) {
+		unsigned char binary[BINARY_SIZE];
+		for (size_t i = 0; i < BINARY_SIZE; i++) {
+			binary[i] = (mantissa >> ((BINARY_SIZE - 1) - i)) & 1;
+		}
+		long long integer_part = get_integer_part(binary, decimal_part_start);
+		long long decimal_part = get_decimal_part(binary + decimal_part_start, BINARY_SIZE - decimal_part_start, precision);
+
+		result += my_wsprint_i(out, integer_part, 10, 0, 0, 0);
+		result += 1; my_wsprint_c(out, '.');
+		result += my_wsprint_i(out, decimal_part, 10, 0, 0, 0);
+	}
+	else {
+		result += 1; my_wsprint_c(out, 'e');
+		result += 1; my_wsprint_c(out, 'r');
+		result += 1; my_wsprint_c(out, 'r');
+	}
+#undef BINARY_SIZE
 	return result;
 }
 
@@ -502,6 +847,16 @@ static long long get_args_value(int z_count, int h_count, int l_count, va_list* 
 
 			if (radix != 0) {
 				result += my_wsprint_i(&out, get_args_value(z_count, h_count, l_count, &args), radix, is_signed, letter_base, width);
+				continue;
+			}
+
+			if (*format == 'f') {
+				if (l_count == 0) {
+					result += my_wsprint_f(&out, (float)va_arg(args, double), (int)width);
+				}
+				else {
+					result += my_wsprint_lf(&out, (double)va_arg(args, double), (int)width);
+				}
 				continue;
 			}
 		}

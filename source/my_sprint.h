@@ -8,12 +8,18 @@ typedef unsigned short wchar_t;
 #ifdef __cplusplus
 extern "C" {
 #endif
+	size_t my_sprint_f(char** out, float f, int precision);
+	size_t my_sprint_lf(char** out, double lf, int precision);
+
 	void my_sprint_c(char** out, int c);
 	size_t my_sprint_s_a(char** out, const char* s, size_t width);
 	size_t my_sprint_s_w(char** out, const wchar_t* s, size_t width);
 	size_t my_sprint_i(char** out, long long i, int radix, int is_signed, int letter_base, size_t width);
 	size_t my_sprint(char* out, const char* format, va_list args);
 	size_t my_sprintf(char* out, const char* format, ...);
+
+	size_t my_wsprint_f(wchar_t** out, float f, int precision);
+	size_t my_wsprint_lf(wchar_t** out, double lf, int precision);
 
 	void my_wsprint_c(wchar_t** out, int c);
 	size_t my_wsprint_s_a(wchar_t** out, const char* s, size_t width);
