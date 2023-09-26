@@ -1,5 +1,6 @@
 ﻿#include "winlog.h"
 #include "my_sprint.h"
+#include "my_sprint_alloc.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -187,6 +188,25 @@ LogCtx* __cdecl LogOpen(const wchar_t* FileName)
 		}
 	}
 	return ctx;
+}
+
+void __cdecl LogPopup(LogCtx* ctx)
+{
+	//0x5c003f003f005c == '\\\0?\0?\0\\' == "\\??\\"
+	wchar_t ApplicationName[MAX_PATH] = L"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+	wchar_t* CommandLine = my_wsprintf_alloc(L"%s Get-Content \"%s\" -Wait -Tail 30", ApplicationName, (*(uint64_t*)ctx->_FileName == 0x5c003f003f005c) ? ctx->_FileName + 4 : ctx->_FileName);
+	if (CommandLine) {
+		STARTUPINFOW StartupInfo = { 0 };
+		StartupInfo.cb = sizeof(StartupInfo);
+		PROCESS_INFORMATION ProcessInformation = { 0 };
+		BOOL success = CreateProcessW(ApplicationName, CommandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &StartupInfo, &ProcessInformation);
+		if (success) {
+			//WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+			CloseHandle(ProcessInformation.hProcess);
+			CloseHandle(ProcessInformation.hThread);
+		}
+		Free(CommandLine);
+	}
 }
 
 void __cdecl LogClose(LogCtx* ctx)

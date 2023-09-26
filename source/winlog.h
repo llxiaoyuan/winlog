@@ -12,6 +12,9 @@ typedef unsigned short wchar_t;
 extern "C" {
 #endif
 	LogCtx* __cdecl LogOpen(const wchar_t* FileName);
+
+	void __cdecl LogPopup(LogCtx* ctx);
+
 	void __cdecl LogClose(LogCtx* ctx);
 	void __cdecl LogStringA(LogCtx* ctx, const char* String);
 	void __cdecl LogStringW(LogCtx* ctx, const wchar_t* String);
