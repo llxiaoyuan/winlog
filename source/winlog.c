@@ -204,7 +204,7 @@ void __cdecl LogPopup(LogCtx* ctx)
 {
 	//0x5c003f003f005c == '\\\0?\0?\0\\' == "\\??\\"
 	wchar_t ApplicationName[MAX_PATH] = L"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
-	wchar_t* CommandLine = my_wsprintf_alloc(L"%s Get-Content \"%s\" -Wait -Tail 32", ApplicationName, (*(uint64_t*)ctx->_FileName == 0x5c003f003f005c) ? ctx->_FileName + 4 : ctx->_FileName);
+	wchar_t* CommandLine = my_wsprintf_alloc(L"\"%s\" Get-Content \"%s\" -Wait -Tail 32", ApplicationName, (*(uint64_t*)ctx->_FileName == 0x5c003f003f005c) ? ctx->_FileName + 4 : ctx->_FileName);
 	if (CommandLine) {
 		STARTUPINFOW StartupInfo = { 0 };
 		StartupInfo.cb = sizeof(StartupInfo);
