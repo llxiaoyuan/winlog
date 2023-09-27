@@ -13,6 +13,7 @@ extern "C" {
 #endif
 	LogCtx* __cdecl LogOpen(const wchar_t* FileName);
 
+	void __cdecl LogClear(LogCtx* ctx);
 	void __cdecl LogPopup(LogCtx* ctx);
 
 	void __cdecl LogClose(LogCtx* ctx);
